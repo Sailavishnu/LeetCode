@@ -1,0 +1,444 @@
+lc : 1187
+
+from typing import List
+import bisect
+
+class Solution:
+    def makeArrayIncreasing(self, arr1: List[int], arr2: List[int]) -> int:
+        arr2 = sorted(set(arr2))
+        from math import inf
+        
+        # dp will store the minimum operations to make arr1[:i] strictly increasing
+        # with the last element being key
+        dp = {-1: 0}  # key: last element, value: min operations
+        
+        for num in arr1:
+            new_dp = {}
+            for last, ops in dp.items():
+                # Option 1: keep arr1[i] if strictly increasing
+                if num > last:
+                    if num in new_dp:
+                        new_dp[num] = min(new_dp[num], ops)
+                    else:
+                        new_dp[num] = ops
+                
+                # Option 2: replace arr1[i] with an element from arr2
+                # find smallest element in arr2 > last
+                idx = bisect.bisect_right(arr2, last)
+                if idx < len(arr2):
+                    replaced = arr2[idx]
+                    if replaced in new_dp:
+                        new_dp[replaced] = min(new_dp[replaced], ops + 1)
+                    else:
+                        new_dp[replaced] = ops + 1
+            
+            if not new_dp:
+                return -1
+            dp = new_dp
+        
+        return min(dp.values())
+
+
+
+
+
+
+lc 1402
+
+from typing import List
+
+class Solution:
+    def maxSatisfaction(self, satisfaction: List[int]) -> int:
+        # Step 1: Sort the dishes from most satisfying to least satisfying
+        satisfaction.sort(reverse=True)
+        
+        total_satisfaction = 0
+        current_sum = 0
+        
+        # Step 2: Greedily add dishes as long as they improve the score
+        for s in satisfaction:
+            current_sum += s
+            
+            # If the cumulative sum goes negative, adding more dishes 
+            # will only hurt our maximum possible score.
+            if current_sum < 0:
+                break
+                
+            total_satisfaction += current_sum
+            
+        return total_satisfaction
+
+
+
+
+lc 179 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+// Custom comparison function for qsort
+int compare(const void* a, const void* b) {
+    char ab[60];
+    char ba[60];
+    
+    // Create combination A + B
+    sprintf(ab, "%s%s", *(const char**)a, *(const char**)b);
+    // Create combination B + A
+    sprintf(ba, "%s%s", *(const char**)b, *(const char**)a);
+    
+    // Sort in descending order based on the string combinations
+    return strcmp(ba, ab);
+}
+
+char* largestNumber(int* nums, int numsSize) {
+    // 1. Allocate an array of strings to hold the string version of each number
+    char** strNums = (char**)malloc(numsSize * sizeof(char*));
+    int totalLength = 0;
+    
+    for (int i = 0; i < numsSize; i++) {
+        strNums[i] = (char*)malloc(20 * sizeof(char));
+        sprintf(strNums[i], "%d", nums[i]);
+        totalLength += strlen(strNums[i]);
+    }
+    
+    // 2. Sort the strings using our custom rule
+    qsort(strNums, numsSize, sizeof(char*), compare);
+    
+    // Edge Case: If the largest number after sorting is "0", the whole result is just "0"
+    if (strcmp(strNums[0], "0") == 0) {
+        // Free allocated memory before returning
+        for (int i = 0; i < numsSize; i++) free(strNums[i]);
+        free(strNums);
+        
+        char* zeroResult = (char*)malloc(2 * sizeof(char));
+        strcpy(zeroResult, "0");
+        return zeroResult;
+    }
+    
+    // 3. Allocate space for the final combined string and concatenate them
+    char* result = (char*)malloc((totalLength + 1) * sizeof(char));
+    result[0] = '\0'; // Start with an empty string
+    
+    for (int i = 0; i < numsSize; i++) {
+        strcat(result, strNums[i]);
+        free(strNums[i]); // Free individual string memory as we go
+    }
+    
+    free(strNums);
+    return result;
+}
+
+
+
+
+lc 215
+
+
+#include <stdlib.h>
+
+// Helper function to maintain the Min-Heap structure (bubble down)
+void minHeapify(int* heap, int size, int index) {
+    int smallest = index;
+    int left = 2 * index + 1;
+    int right = 2 * index + 2;
+
+    if (left < size && heap[left] < heap[smallest]) {
+        smallest = left;
+    }
+    if (right < size && heap[right] < heap[smallest]) {
+        smallest = right;
+    }
+    if (smallest != index) {
+        int temp = heap[index];
+        heap[index] = heap[smallest];
+        heap[smallest] = temp;
+        minHeapify(heap, size, smallest);
+    }
+}
+
+int findKthLargest(int* nums, int numsSize, int k) {
+    // 1. Allocate space for a min-heap of size k
+    int* heap = (int*)malloc(k * sizeof(int));
+    
+    // 2. Insert the first k elements into the heap
+    for (int i = 0; i < k; i++) {
+        heap[i] = nums[i];
+    }
+
+    // 3. Build the initial min-heap from bottom-up
+    for (int i = (k / 2) - 1; i >= 0; i--) {
+        minHeapify(heap, k, i);
+    }
+
+    // 4. Iterate through the remaining elements in the array
+    for (int i = k; i < numsSize; i++) {
+        // If the current element is larger than the smallest in our heap
+        if (nums[i] > heap[0]) {
+            heap[0] = nums[i]; // Replace the root
+            minHeapify(heap, k, 0); // Restore min-heap properties
+        }
+    }
+
+    // 5. The root of the heap now contains the kth largest element
+    int result = heap[0];
+    free(heap);
+    return result;
+}
+
+
+
+
+
+lc 368
+
+#include <stdlib.h>
+
+// Comparison function for sorting
+int compare(const void* a, const void* b) {
+    return (*(int*)a - *(int*)b);
+}
+
+/**
+ * Note: The returned array must be malloced, assume caller calls free().
+ */
+int* largestDivisibleSubset(int* nums, int numsSize, int* returnSize) {
+    *returnSize = 0;
+    if (numsSize == 0) return NULL;
+
+    // 1. Sort the array so we only need to check one-way divisibility (nums[i] % nums[j] == 0)
+    qsort(nums, numsSize, sizeof(int), compare);
+
+    // 2. Allocate DP tables
+    int* dp = (int*)malloc(numsSize * sizeof(int));
+    int* parent = (int*)malloc(numsSize * sizeof(int));
+
+    int max_len = 1;
+    int max_idx = 0;
+
+    // Initialize DP states
+    for (int i = 0; i < numsSize; i++) {
+        dp[i] = 1;
+        parent[i] = -1;
+    }
+
+    // 3. Compute DP transitions
+    for (int i = 1; i < numsSize; i++) {
+        for (int j = 0; j < i; j++) {
+            if (nums[i] % nums[j] == 0 && dp[j] + 1 > dp[i]) {
+                dp[i] = dp[j] + 1;
+                parent[i] = j;
+            }
+        }
+        // Track the overall maximum subset length and its ending index
+        if (dp[i] > max_len) {
+            max_len = dp[i];
+            max_idx = i;
+        }
+    }
+
+    // 4. Reconstruct the subset using the parent pointers
+    int* result = (int*)malloc(max_len * sizeof(int));
+    *returnSize = max_len;
+    
+    int curr = max_idx;
+    for (int i = max_len - 1; i >= 0; i--) {
+        result[i] = nums[curr];
+        curr = parent[curr];
+    }
+
+    // Free local tracking buffers
+    free(dp);
+    free(parent);
+
+    return result;
+}
+
+
+
+lc 442
+
+/**
+ * Note: The returned array must be malloced, assume caller calls free().
+ */
+int* findDuplicates(int* nums, int numsSize, int* returnSize) {
+    // In the worst case, half of the elements could be duplicates
+    int* res = (int*)malloc((numsSize / 2) * sizeof(int));
+    *returnSize = 0;
+    
+    for (int i = 0; i < numsSize; i++) {
+        // Use absolute value because the current element might have been flipped negative
+        int idx = abs(nums[i]) - 1;
+        
+        // If the value at the target index is negative, we found a duplicate
+        if (nums[idx] < 0) {
+            res[*returnSize] = abs(nums[i]);
+            (*returnSize)++;
+        } else {
+            // Mark the index as visited by flipping its sign
+            nums[idx] = -nums[idx];
+        }
+    }
+    
+    return res;
+}
+
+
+
+lc 75
+
+
+void sortColors(int* nums, int numsSize) {
+    int l = 0;
+    int i = 0;
+    int r = numsSize - 1;
+    int t;
+    
+    while (i <= r) {
+        if (nums[i] == 0) {
+            t = nums[i];
+            nums[i] = nums[l];
+            nums[l] = t;
+            i++;
+            l++;
+        }
+        else if (nums[i] == 1) {
+            i++;
+        }
+        else if (nums[i] == 2) {
+            t = nums[i];
+            nums[i] = nums[r];
+            nums[r] = t;
+            r--;
+        }
+    }
+}
+
+
+
+
+lc 761
+
+
+
+class Solution:
+    def makeLargestSpecial(self, s: str) -> str:
+        count = 0
+        i = 0
+        tokens = []
+        
+        # Step 1: Split the string into independent special substrings
+        for j, char in enumerate(s):
+            if char == '1':
+                count += 1
+            else:
+                count -= 1
+                
+            if count == 0:
+                # Step 2: Strip outer '1' and '0', recurse on the inside, then re-wrap
+                inner_sorted = self.makeLargestSpecial(s[i + 1:j])
+                tokens.append('1' + inner_sorted + '0')
+                i = j + 1
+                
+        # Step 3: Sort substrings in descending order and join
+        tokens.sort(reverse=True)
+        return "".join(tokens)
+
+
+
+
+
+lc 88
+
+/**
+ * Definition for singly-linked list.
+ * struct ListNode {
+ *     int val;
+ *     struct ListNode *next;
+ * };
+ */
+
+struct ListNode* merge(struct ListNode *l1, struct ListNode *l2){
+    struct ListNode dummy = {0, NULL};
+    struct ListNode *cur = &dummy;
+    while(l1 && l2){
+        if(l1->val <= l2->val){
+            cur->next = l1;
+            l1 = l1->next;
+        }else{
+            cur->next = l2;
+            l2 = l2->next;
+        }
+        cur = cur->next;
+    }
+    cur->next = l1 ? l1 : l2;
+    return dummy.next;
+}
+struct ListNode* sortList(struct ListNode* head) {
+    if(!head || !head->next) return head;
+
+    struct ListNode *slow =head, *fast = head->next;
+    while(fast && fast->next){
+        slow = slow->next;
+        fast = fast->next->next;
+    }
+    struct ListNode *mid = slow->next;
+    slow->next = NULL;
+    struct ListNode *left = sortList(head);
+    struct ListNode *right = sortList(mid);
+    struct ListNode *new_head = merge(left, right);
+    return new_head;
+}
+
+
+
+
+
+lc 899
+
+class Solution:
+    def orderlyQueue(self, s: str, k: int) -> str:
+        # Case 1: If k == 1, find the lexicographically smallest rotation
+        if k == 1:
+            return min(s[i:] + s[:i] for i in range(len(s)))
+        
+        # Case 2: If k > 1, we can sort the entire string completely
+        else:
+            return "".join(sorted(s))
+
+
+
+lc 987
+
+from collections import defaultdict
+from typing import Optional, List
+
+# Definition for a binary tree node.
+class TreeNode:
+    def __init__(self, val=0, left=None, right=None):
+        self.val = val
+        self.left = left
+        self.right = right
+
+class Solution:
+    def verticalTraversal(self, root: Optional[TreeNode]) -> List[List[int]]:
+        # Map to store nodes grouped by column: col -> list of (row, val)
+        nodes_map = defaultdict(list)
+        
+        # Standard Depth-First Search (DFS) to assign coordinates
+        def dfs(node, row, col):
+            if not node:
+                return
+            nodes_map[col].append((row, node.val))
+            dfs(node.left, row + 1, col - 1)
+            dfs(node.right, row + 1, col + 1)
+            
+        dfs(root, 0, 0)
+        
+        result = []
+        # Sort columns from left to right
+        for col in sorted(nodes_map.keys()):
+            # Sort within the column: first by row, then by value
+            sorted_nodes = sorted(nodes_map[col], key=lambda x: (x[0], x[1]))
+            # Extract just the values for the output
+            result.append([val for row, val in sorted_nodes])
+            
+        return result
