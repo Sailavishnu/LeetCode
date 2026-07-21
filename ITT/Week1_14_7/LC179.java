@@ -1,34 +1,26 @@
 import java.util.Arrays;
-import java.util.Comparator;
 
-public class LC179 {
+class Solution {
     public String largestNumber(int[] nums) {
-        // Convert to String array
-        String[] strNums = new String[nums.length];
+        // Step 1: Convert integers to Strings
+        String[] strs = new String[nums.length];
         for (int i = 0; i < nums.length; i++) {
-            strNums[i] = String.valueOf(nums[i]);
+            strs[i] = String.valueOf(nums[i]);
         }
         
-        // Sort using custom comparator
-        Arrays.sort(strNums, new Comparator<String>() {
-            @Override
-            public int compare(String a, String b) {
-                String ab = a + b;
-                String ba = b + a;
-                // Sort in descending order: compare ba to ab
-                return ba.compareTo(ab);
-            }
-        });
+        // Step 2: Sort strings using the custom concatenation comparator
+        // We sort in descending order (s2 + s1 compared to s1 + s2)
+        Arrays.sort(strs, (s1, s2) -> (s2 + s1).compareTo(s1 + s2));
         
-        // Edge case: if the largest number is "0", the result is "0"
-        if (strNums[0].equals("0")) {
+        // Step 3: Handle the leading zero edge case
+        if (strs[0].equals("0")) {
             return "0";
         }
         
-        // Join all strings
+        // Step 4: Join all pieces together
         StringBuilder sb = new StringBuilder();
-        for (String s : strNums) {
-            sb.append(s);
+        for (String str : strs) {
+            sb.append(str);
         }
         
         return sb.toString();

@@ -1,32 +1,32 @@
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
-public class LC761 {
+class Solution {
     public String makeLargestSpecial(String s) {
+        List<String> res = new ArrayList<>();
         int count = 0;
         int i = 0;
-        List<String> tokens = new ArrayList<>();
         
-        for (int j = 0; j < s.length(); j++) {
+        // Split s into its top-level independent special substrings
+        for (int j = 0; j < s.length(); ++j) {
             if (s.charAt(j) == '1') {
                 count++;
             } else {
                 count--;
             }
             
+            // Found a complete independent special substring
             if (count == 0) {
-                String innerSorted = makeLargestSpecial(s.substring(i + 1, j));
-                tokens.add("1" + innerSorted + "0");
-                i = j + 1;
+                // Recursively process the inner content: s.substring(i + 1, j)
+                // Wrap it back with the outer '1' and '0'
+                res.add("1" + makeLargestSpecial(s.substring(i + 1, j)) + "0");
+                i = j + 1; // Move pointer to the next substring start
             }
         }
         
-        Collections.sort(tokens, Collections.reverseOrder());
-        StringBuilder sb = new StringBuilder();
-        for (String t : tokens) {
-            sb.append(t);
-        }
-        return sb.toString();
+        // Sort components in descending order to maximize lexicographical value
+        Collections.sort(res, Collections.reverseOrder());
+        
+        // Join the sorted parts back together
+        return String.join("", res);
     }
 }

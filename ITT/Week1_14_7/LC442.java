@@ -1,20 +1,23 @@
 import java.util.ArrayList;
 import java.util.List;
 
-public class LC442 {
+class Solution {
     public List<Integer> findDuplicates(int[] nums) {
-        List<Integer> res = new ArrayList<>();
+        List<Integer> result = new ArrayList<>();
         
         for (int i = 0; i < nums.length; i++) {
-            int idx = Math.abs(nums[i]) - 1;
+            // Get the index mapped by the current value
+            int index = Math.abs(nums[i]) - 1;
             
-            if (nums[idx] < 0) {
-                res.add(Math.abs(nums[i]));
+            // If the element at that index is negative, it's a duplicate
+            if (nums[index] < 0) {
+                result.add(index + 1);
             } else {
-                nums[idx] = -nums[idx];
+                // Mark the index as visited by negating its value
+                nums[index] = -nums[index];
             }
         }
         
-        return res;
+        return result;
     }
 }

@@ -1,24 +1,27 @@
 import java.util.Arrays;
 
-public class LC1402 {
+class Solution {
     public int maxSatisfaction(int[] satisfaction) {
-        // Sort in ascending order first
+        // Step 1: Sort the dishes by satisfaction level
         Arrays.sort(satisfaction);
         
-        int totalSatisfaction = 0;
-        int currentSum = 0;
+        int maxLikeTime = 0;
+        int currentPrefixSum = 0;
         
-        // Iterate from most satisfying to least satisfying (end to start)
+        // Step 2: Traverse backwards from the most satisfying dish
         for (int i = satisfaction.length - 1; i >= 0; i--) {
-            currentSum += satisfaction[i];
+            // Include the current dish into our selected subset sum
+            currentPrefixSum += satisfaction[i];
             
-            if (currentSum < 0) {
+            // If the cumulative sum is positive, it increases our total coefficient
+            if (currentPrefixSum > 0) {
+                maxLikeTime += currentPrefixSum;
+            } else {
+                // If it becomes negative, adding further dishes will reduce our total
                 break;
             }
-            
-            totalSatisfaction += currentSum;
         }
         
-        return totalSatisfaction;
+        return maxLikeTime;
     }
 }

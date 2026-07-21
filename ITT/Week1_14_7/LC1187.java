@@ -1,62 +1,67 @@
 import java.util.*;
 
-public class LC1187 {
+class Solution {
     public int makeArrayIncreasing(int[] arr1, int[] arr2) {
-        // Sort and remove duplicates from arr2
-        TreeSet<Integer> set = new TreeSet<>();
-        for (int val : arr2) {
-            set.add(val);
-        }
-        int[] uniqueArr2 = new int[set.size()];
-        int idx = 0;
-        for (int val : set) {
-            uniqueArr2[idx++] = val;
+        // Step 1: Sort arr2 and remove duplicates to facilitate binary search
+        Arrays.sort(arr2);
+        List<Integer> uniqueArr2 = new ArrayList<>();
+        for (int num : arr2) {
+            if (uniqueArr2.isEmpty() || uniqueArr2.get(uniqueArr2.size() - 1) != num) {
+                uniqueArr2.add(num);
+            }
         }
 
+        // dp maps: ending_value -> minimum_operations
         Map<Integer, Integer> dp = new HashMap<>();
-        dp.put(-1, 0);
+        dp.put(-1, 0); // Base case: before index 0, ending value is -1 with 0 ops
 
-        for (int num : arr1) {
-            Map<Integer, Integer> newDp = new HashMap<>();
+        // Step 2: Process each element in arr1
+        for (int currentVal : arr1) {
+            Map<Integer, Integer> nextDp = new HashMap<>();
+
             for (Map.Entry<Integer, Integer> entry : dp.entrySet()) {
-                int last = entry.getKey();
-                int ops = entry.getValue();
+                int prevVal = entry.getKey();
+                int currentOps = entry.getValue();
 
-                // Option 1: Keep num if it's strictly greater than last
-                if (num > last) {
-                    newDp.put(num, Math.min(newDp.getOrDefault(num, Integer.MAX_VALUE), ops));
+                // Option 1: Keep the current value from arr1
+                if (currentVal > prevVal) {
+                    nextDp.put(currentVal, Math.min(nextDp.getOrDefault(currentVal, Integer.MAX_VALUE), currentOps));
                 }
 
-                // Option 2: Replace num with the smallest element in uniqueArr2 > last
-                int replIdx = upperBound(uniqueArr2, last);
-                if (replIdx < uniqueArr2.length) {
-                    int replaced = uniqueArr2[replIdx];
-                    newDp.put(replaced, Math.min(newDp.getOrDefault(replaced, Integer.MAX_VALUE), ops + 1));
+                // Option 2: Replace the value with a valid choice from arr2
+                int replacementIdx = upperBound(uniqueArr2, prevVal);
+                if (replacementIdx < uniqueArr2.size()) {
+                    int replacementVal = uniqueArr2.get(replacementIdx);
+                    nextDp.put(replacementVal, Math.min(nextDp.getOrDefault(replacementVal, Integer.MAX_VALUE), currentOps + 1));
                 }
             }
 
-            if (newDp.isEmpty()) {
+            // If no valid states can be reached, it's impossible
+            if (nextDp.isEmpty()) {
                 return -1;
             }
-            dp = newDp;
+            dp = nextDp;
         }
 
+        // Step 3: Find the global minimum operations from the final map
         int minOps = Integer.MAX_VALUE;
         for (int ops : dp.values()) {
             minOps = Math.min(minOps, ops);
         }
-        return minOps;
+
+        return minOps == Integer.MAX_VALUE ? -1 : minOps;
     }
 
-    private int upperBound(int[] arr, int target) {
+    // Helper method to find the first element strictly greater than target
+    private int upperBound(List<Integer> list, int target) {
         int low = 0;
-        int high = arr.length;
+        int high = list.size();
         while (low < high) {
-            int mid = (low + high) >>> 1;
-            if (arr[mid] <= target) {
-                low = mid + 1;
-            } else {
+            int mid = low + (high - low) / 2;
+            if (list.get(mid) > target) {
                 high = mid;
+            } else {
+                low = mid + 1;
             }
         }
         return low;
